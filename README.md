@@ -1,5 +1,7 @@
 # EU Regulation RAG Assistant
 
+[![Docker build](https://github.com/Mervecaliskann/eu-regulation-rag/actions/workflows/docker.yml/badge.svg)](https://github.com/Mervecaliskann/eu-regulation-rag/actions/workflows/docker.yml)
+
 **English** · [Türkçe](README.tr.md)
 
 A RAG (retrieval-augmented generation) system that answers questions about three EU regulations and cites the article it used:
@@ -170,7 +172,7 @@ Same question, with and without the reranker:
 
 The reranker costs about 2 seconds on CPU but finds the article that actually answers the question.
 
-A `Dockerfile` is included (CPU-only torch, models downloaded at build time, port 7860).
+A `Dockerfile` is included (CPU-only torch, models downloaded at build time, port 7860).  A GitHub Actions workflow builds the image on every push and smoke-tests the running API (`/health` and input validation).
 
 ## Run it
 
