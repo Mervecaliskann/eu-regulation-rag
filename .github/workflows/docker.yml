@@ -1,0 +1,44 @@
+# EN: Builds the Docker image on every push and checks that the API starts.
+# TR: Her push'ta Docker imajını oluşturur ve API'nin açıldığını kontrol eder.
+name: Docker build
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:        # EN: also allows a manual run / TR: elle çalıştırmaya da izin verir
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get the code
+        uses: actions/checkout@v4
+
+      - name: Build the image
+        run: docker build -t eu-regulation-rag .
+
+      - name: Start the container
+        # EN: a dummy key is enough to start; /ask is not called with a real question
+        # TR: açılış için sahte bir anahtar yeterli; /ask gerçek bir soruyla çağrılmıyor
+        run: docker run -d --name rag -p 7860:7860 -e GROQ_API_KEY=dummy eu-regulation-rag
+
+      - name: Wait for startup and check /health
+        run: |
+          for i in $(seq 1 30); do
+            if curl -sf http://localhost:7860/health | grep -q '"models_loaded":true'; then
+              curl -s http://localhost:7860/health; echo; exit 0
+            fi
+            sleep 5
+          done
+          docker logs rag
+          exit 1
+
+      - name: Check request validation (expect 422)
+        run: |
+          code=$(curl -s -o /dev/null -w "%{http_code}" -X POST http://localhost:7860/ask \
+                 -H "Content-Type: application/json" -d '{"question":"hi"}')
+          echo "HTTP $code"
+          test "$code" = "422"
+
+      - name: Image size
+        run: docker images eu-regulation-rag
