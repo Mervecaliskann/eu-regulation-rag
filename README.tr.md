@@ -84,6 +84,9 @@ answer = llm(SYSTEM_PROMPT, best5, question)    # "SADECE numaralı kaynakları 
 ### `eval.py`: ölçüm
 Her test sorusu için FAISS 20 adayı **bir kez** getirir. Aynı 20 aday iki şekilde sıralanır (FAISS sırası ve reranker sırası); böylece aradaki tek fark reranker olur. Sonra LLM reranker'ın seçtiği 5 parçadan cevap verir, ikinci bir model (hakem) her iddianın kaynaklarda olup olmadığını kontrol eder.
 
+### `api.py`: web servisi
+`rag.py`'yi saran FastAPI servisi; bkz. [Web API](#web-api-fastapi).
+
 ## Teknolojiler ve ayarlar
 
 | Bölüm | Seçim | Değer | Neden |
@@ -96,6 +99,7 @@ Her test sorusu için FAISS 20 adayı **bir kez** getirir. Aynı 20 aday iki şe
 | Reranker | `cross-encoder/ms-marco-MiniLM-L-6-v2` | 20 → 5 | Soru ve parçayı birlikte okur; az RAM için küçük (~90 MB) |
 | LLM | `openai/gpt-oss-120b` (Groq) | temperature 0 | Tekrarlanabilir cevap; kaynak gösteren ve bulamazsa reddeden prompt |
 | Hakem | `openai/gpt-oss-20b` (Groq) | | Farklı bir model kontrol eder; model kendi cevabını notlamaz |
+| API | FastAPI + uvicorn, Docker | | Modeller açılışta bir kez yüklenir; istekler otomatik kontrol edilir, doküman otomatik oluşur |
 
 ## Temel kavramlar
 
@@ -137,6 +141,35 @@ Not: `rag.py`'deki kaynak işareti temizliği (`[1†L1-L3]` → `[1]`) bu ölç
 - **Hakemin reddettiği cevaplar** kaynaklarda olmayan küçük eklemelerdi (örneğin rıza için "tarihli kayıt"). Bir cevap, sadece 5 kaynak verildiği halde `[7]` kaynağını gösterdi.
 - **PDF temizliği önemliydi:** bir ekteki "... in accordance with Article 49" atfı satır kayması yüzünden tek başına bir satıra düştü ve önce yeni bir madde sanıldı (113 yerine 114 madde). Sıra numarası kontrolüyle düzeldi.
 
+## Web API (FastAPI)
+
+`api.py` sistemi bir web servisine çevirir. Modeller sunucu açılırken **bir kez** yüklenir; sonra her soru yaklaşık 1-3 saniye sürer.
+
+```bash
+uvicorn api:app --port 8000
+# tarayıcıda denemek için http://127.0.0.1:8000/docs adresini aç
+```
+
+| Uç nokta | Ne yapar |
+|---|---|
+| `POST /ask` | `{"question": "...", "use_rerank": true}` → cevap, numaralı kaynaklar, süre |
+| `GET /health` | Sunucu açık mı, modeller yüklü mü? |
+| `GET /docs` | FastAPI'nin otomatik oluşturduğu test sayfası |
+
+İstekler otomatik kontrol edilir (soru 3-500 karakter olmalı, değilse `422`); LLM çağrısı başarısız olursa (örneğin hız sınırı) API çökmek yerine `503` döner.
+
+Aynı soru, reranker açık ve kapalı:
+
+| | `use_rerank: true` | `use_rerank: false` |
+|---|---|---|
+| Kaynaklar | **GDPR Article 22**, GDPR Recital 71, AI Act ... | sadece AI Act gerekçeleri |
+| Cevap | Sadece bir GDPR istisnası varsa, insan müdahalesi ve itiraz hakkıyla birlikte | "Evet, AI Act'e göre yüksek risklidir" (GDPR Madde 22'yi kaçırıyor) |
+| Süre | ~3,0 sn | ~1,0 sn |
+
+Reranker CPU'da yaklaşık 2 saniye ekliyor ama soruyu gerçekten cevaplayan maddeyi buluyor.
+
+Repoda bir `Dockerfile` da var (sadece CPU'lu torch, modeller imaj oluşturulurken iniyor, port 7860).
+
 ## Çalıştırma
 
 ```bash
@@ -175,7 +208,7 @@ python eval.py               # tam ölçüm (Groq ücretsiz katmanında ~10-15 d
 
 - Tam terimler ve sayılar (örneğin ceza miktarı) için hybrid arama (BM25 + vektör, Reciprocal Rank Fusion)
 - Daha büyük veya hukuk alanına özel bir reranker (örneğin `bge-reranker-base`) ile karşılaştırma
-- FastAPI uç noktası ve Dockerfile
+- API'yi (Docker) herkese açık bir sunucuya yüklemek
 - Her kaynak numarasının verilen kaynaklarda gerçekten var olup olmadığını kontrol etmek
 
 Kaynak belgeler: © Avrupa Birliği, [EUR-Lex](https://eur-lex.europa.eu), Komisyon'un yeniden kullanım politikası kapsamında kullanıldı.
