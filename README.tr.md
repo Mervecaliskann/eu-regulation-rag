@@ -1,5 +1,7 @@
 # AB Mevzuatı RAG Asistanı
 
+[![Docker build](https://github.com/Mervecaliskann/eu-regulation-rag/actions/workflows/docker.yml/badge.svg)](https://github.com/Mervecaliskann/eu-regulation-rag/actions/workflows/docker.yml)
+
 [English](README.md) · **Türkçe**
 
 Üç AB yönetmeliği hakkındaki soruları cevaplayan ve kullandığı maddeyi kaynak olarak gösteren bir RAG (retrieval-augmented generation) sistemi:
@@ -168,7 +170,7 @@ Aynı soru, reranker açık ve kapalı:
 
 Reranker CPU'da yaklaşık 2 saniye ekliyor ama soruyu gerçekten cevaplayan maddeyi buluyor.
 
-Repoda bir `Dockerfile` da var (sadece CPU'lu torch, modeller imaj oluşturulurken iniyor, port 7860).
+Repoda bir `Dockerfile` da var (sadece CPU'lu torch, modeller imaj oluşturulurken iniyor, port 7860).  Bir GitHub Actions iş akışı her push'ta imajı oluşturuyor ve çalışan API'yi test ediyor (`/health` ve istek kontrolü).
 
 ## Çalıştırma
 
