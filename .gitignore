@@ -1,0 +1,12 @@
+# Secrets / Gizli bilgiler
+.env
+
+# Python
+.venv/
+__pycache__/
+
+# Downloaded PDFs (re-download from EUR-Lex) / İndirilen PDF'ler (EUR-Lex'ten tekrar indirilebilir)
+data/*.pdf
+
+# Model cache / Model önbelleği
+hf_cache/

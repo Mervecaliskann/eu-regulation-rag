@@ -1,0 +1,18 @@
+{
+  "n_questions": 35,
+  "n_in_scope": 32,
+  "faiss_only": {
+    "hit@1": 0.53125,
+    "recall@5": 0.84375,
+    "recall@20": 1.0,
+    "mrr": 0.6654885912698413
+  },
+  "faiss_plus_reranker": {
+    "hit@1": 0.59375,
+    "recall@5": 0.9375,
+    "recall@20": 1.0,
+    "mrr": 0.7219494047619047
+  },
+  "faithfulness": 0.875,
+  "correct_refusals": "3/3"
+}
