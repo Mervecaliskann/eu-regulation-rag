@@ -13,7 +13,8 @@ WORKDIR /home/user/app
 
 # EN: CPU-only torch first (~200 MB instead of ~2.5 GB with CUDA), then the rest
 # TR: Önce sadece CPU'lu torch (CUDA'lı ~2,5 GB yerine ~200 MB), sonra diğerleri
-RUN pip install --no-cache-dir torch --index-url https://download.pytorch.org/whl/cpu
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir torch --index-url https://download.pytorch.org/whl/cpu --extra-index-url https://pypi.org/simple
 COPY --chown=user requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
